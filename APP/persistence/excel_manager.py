@@ -19,6 +19,9 @@ class ExcelManager:
 
     def _abrir(self):
         return openpyxl.load_workbook(self.archivo)
+        
+    def _guardar(self, workbook):
+        workbook.save(self.archivo)
 
     # === ESTUDIANTES ===
     def agregar_estudiante(self, data):
@@ -44,7 +47,7 @@ class ExcelManager:
                 row[1].value = nombre
                 row[2].value = apellido
                 row[3].value = legajo
-        wb.save(self.archivo)
+        self._guardar(wb)
 
     def eliminar_estudiante(self, id_est):
         wb = self._abrir()
@@ -52,14 +55,21 @@ class ExcelManager:
         for row in ws.iter_rows():
             if row[0].value == id_est:
                 ws.delete_rows(row[0].row)
-        wb.save(self.archivo)
+        self._guardar(wb)
 
     # === MATERIAS ===
-    def agregar_materia(self, data):
+    def agregar_materia(self, datos):
         wb = self._abrir()
         ws = wb["Materias"]
-        ws.append(data)
-        wb.save(self.archivo)
+        
+        # Verificar si ya existe una materia con el mismo código
+        codigo = datos[1]  # El código está en la segunda posición
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row and row[1] == codigo:  # Verificar el código en la segunda columna
+                raise ValueError(f"Ya existe una materia con el código: {codigo}")
+                
+        ws.append(datos)
+        self._guardar(wb)
 
     def obtener_materias(self):
         wb = self._abrir()
@@ -67,22 +77,39 @@ class ExcelManager:
         datos = []
         for row in ws.iter_rows(values_only=True):
             if row:
-                datos.append({"Id": row[0], "Nombre": row[1]})
+                datos.append({
+                    "Id": row[0],
+                    "Codigo": row[1],
+                    "Nombre": row[2]
+                })
         return datos
 
-    def eliminar_materia(self, id_mat):
+    def modificar_materia(self, codigo, nuevo_nombre):
         wb = self._abrir()
         ws = wb["Materias"]
-        for row in ws.iter_rows():
-            if row[0].value == id_mat:
-                ws.delete_rows(row[0].row)
-        wb.save(self.archivo)
+        for row in ws.iter_rows(min_row=2):
+            if str(row[1].value).lower() == codigo.lower():  # Buscar por código
+                row[2].value = nuevo_nombre  # Actualizar nombre
+                self._guardar(wb)
+                return True
+        return False
+
+    def eliminar_materia(self, codigo):
+        wb = self._abrir()
+        ws = wb["Materias"]
+        for idx, row in enumerate(ws.iter_rows(min_row=2), start=2):
+            if str(row[1].value).lower() == codigo.lower():  # Buscar por código
+                ws.delete_rows(idx)
+                self._guardar(wb)
+                return True
+        return False
 
     # === INSCRIPCIONES ===
     def agregar_inscripcion(self, data):
         wb = self._abrir()
         ws = wb["Inscripciones"]
         ws.append(data)
+        self._guardar(wb)
         wb.save(self.archivo)
 
     def obtener_inscripciones(self):
