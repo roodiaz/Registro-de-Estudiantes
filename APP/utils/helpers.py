@@ -1,7 +1,19 @@
-def generar_id():
-    # TODO: Generar ID único (por ahora, placeholder)
-    pass
+import uuid
+import os
+
+def generar_id(prefix):
+    return f"{prefix}-{uuid.uuid4().hex[:6]}"
 
 def validar_legajo(legajo):
-    # TODO: Validar formato de legajo
-    pass
+    return legajo.isdigit()
+
+def limpiar_pantalla():
+    # Windows
+    if os.name == "nt":
+        os.system("cls")
+    # Linux/Mac
+    else:
+        os.system("clear")
+
+def pausar():
+    input("\nPresione Enter para continuar...")
