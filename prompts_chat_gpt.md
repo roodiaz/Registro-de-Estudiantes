@@ -140,5 +140,54 @@ Entonces armamos el esqueleto con las carpetas y archivos vacíos, definiendo la
 ### Respuesta
 (👉 Aquí fue donde ya se pasó todo el código funcional con `main.py`, `models/`, `services/`, `persistence/` y `utils/` completos).  
 
----
-	
+--- 
+
+# 📘 Conversación – Generación del README.md con Windsurf
+
+## Prompt 1
+> Necesito que me armes un prompt para pasarle a la ia windsurf para que me arme el archivo README
+
+### Respuesta
+¡De una! 🚀  
+Te armo un **prompt pensado para Windsurf** para que te genere un `README.md` completo, claro y en formato académico/técnico para tu proyecto de **Registro de Estudiantes**.  
+
+### 📌 Prompt sugerido para Windsurf
+Quiero que me generes un archivo README.md para un proyecto en Python llamado "Registro de Estudiantes".
+
+El README debe estar bien estructurado y contener:
+
+1. **Título y descripción**: una breve introducción al sistema, aclarando que es una app de consola para gestionar estudiantes, materias e inscripciones.
+2. **Características principales**:
+   - CRUD de Estudiantes, Materias e Inscripciones.
+   - Persistencia en un archivo Excel (.xlsx) con tres hojas (Estudiantes, Materias, Inscripciones).
+   - Exportación de datos a CSV (todo o un estudiante por legajo).
+   - Promedio recalculado dinámicamente a partir de las notas.
+   - Interfaz por consola con menús numéricos.
+3. **Requisitos previos**:
+   - Python 3.9+ (o versión compatible).
+   - Librería `openpyxl` instalada.
+4. **Instalación**:
+   - Instrucciones para clonar el repo.
+   - Crear un entorno virtual (opcional).
+   - Instalar dependencias con `pip install -r requirements.txt`.
+5. **Ejecución**:
+   - Comando `python main.py`.
+   - Breve explicación de la navegación por menús.
+6. **Estructura del proyecto** (mostrar árbol de carpetas y explicar cada módulo).
+7. **Librerías utilizadas**: incluir una lista de dependencias y explicar para qué se usa cada una.  
+   Ejemplo:
+   - `openpyxl`: lectura y escritura del archivo Excel (.xlsx).
+   - `csv`: exportación de datos en formato CSV.
+   - `uuid`: generación de identificadores únicos.
+   - `os`: manejo de directorios y limpieza de pantalla en consola.
+8. **Uso básico**: ejemplos de cómo agregar un estudiante, inscribirlo en materias y exportar datos.
+9. **Limitaciones y aclaraciones**:
+   - El Excel base no debe modificarse manualmente.
+   - Una nota no puede ser modificada una vez cargada.
+10. **Licencia y créditos** (puede ser MIT, o poner "Trabajo práctico académico").
+11. **Contacto**: autor/a o equipo que lo desarrolló.
+
+El README debe usar **Markdown** con títulos, subtítulos, listas, bloques de código y emojis cuando sean útiles para hacerlo más legible.
+
+
+
