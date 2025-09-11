@@ -12,9 +12,19 @@ class ExcelManager:
     def _crear_archivo(self):
         wb = openpyxl.Workbook()
         wb.remove(wb.active)
-        wb.create_sheet("Estudiantes")
-        wb.create_sheet("Materias")
-        wb.create_sheet("Inscripciones")
+        
+        # Crear hoja de Estudiantes
+        ws_est = wb.create_sheet("Estudiantes")
+        ws_est.append(["Id", "Legajo", "Nombre", "Apellido"])
+        
+        # Crear hoja de Materias
+        ws_mat = wb.create_sheet("Materias")
+        ws_mat.append(["Id", "Codigo", "Nombre"])
+        
+        # Crear hoja de Inscripciones con el nuevo campo Fecha
+        ws_ins = wb.create_sheet("Inscripciones")
+        ws_ins.append(["Id", "EstudianteId", "MateriaId", "Nota", "Fecha"])
+        
         wb.save(self.archivo)
 
     def _abrir(self):
@@ -128,17 +138,35 @@ class ExcelManager:
     def agregar_inscripcion(self, data):
         wb = self._abrir()
         ws = wb["Inscripciones"]
+        
+        # Ensure the data has all required fields
+        if len(data) < 4:  # At least ID, EstudianteId, MateriaId, Nota are required
+            raise ValueError("Datos de inscripción incompletos")
+            
+        # If date is not provided, use current datetime
+        if len(data) == 4:  # If Fecha is not in the data
+            from datetime import datetime
+            data.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            
         ws.append(data)
         self._guardar(wb)
-        wb.save(self.archivo)
 
     def obtener_inscripciones(self):
         wb = self._abrir()
         ws = wb["Inscripciones"]
         datos = []
-        for row in ws.iter_rows(values_only=True):
-            if row:
-                datos.append({"Id": row[0], "EstudianteId": row[1], "MateriaId": row[2], "Nota": float(row[3])})
+        for row in ws.iter_rows(min_row=2, values_only=True):  # Skip header row
+            if row:  # Check if row is not empty
+                inscripcion = {
+                    "Id": row[0],
+                    "EstudianteId": row[1],
+                    "MateriaId": row[2],
+                    "Nota": float(row[3]) if row[3] is not None and str(row[3]).strip() else None
+                }
+                # Add Fecha if it exists in the row
+                if len(row) > 4:
+                    inscripcion["Fecha"] = row[4]
+                datos.append(inscripcion)
         return datos
 
     def calcular_promedio(self, estudiante_id):

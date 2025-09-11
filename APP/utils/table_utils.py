@@ -6,7 +6,8 @@ def print_table(
     column_widths: Optional[Dict[str, int]] = None,
     show_index: bool = False,
     title: Optional[str] = None,
-    footer: Optional[str] = None
+    footer: Optional[str] = None,
+    display_headers: Optional[List[str]] = None
 ) -> None:
     """
     Imprime una tabla formateada a partir de una lista de diccionarios.
@@ -53,13 +54,21 @@ def print_table(
         print(f"{title:^{table_width}}")
         print("=" * table_width)
     
+    # Usar display_headers si está definido, de lo contrario usar los headers en minúsculas
+    display_headers_list = display_headers if display_headers is not None else [h.title() for h in headers_lower]
+    
+    # Asegurarse de que display_headers tenga la misma longitud que headers
+    if len(display_headers_list) != len(headers_lower):
+        display_headers_list = [h.title() for h in headers_lower]
+    
     # Imprimir encabezados
     header_line = ""
     if show_index:
         header_line += "  #  |"
     
     for i, h in enumerate(headers_lower):
-        header_line += f" {h.title():<{column_widths[h]}}|"
+        display_text = str(display_headers_list[i])
+        header_line += f" {display_text:<{column_widths[h]}}|"
     
     print("-" * (len(header_line) + 1))
     print(header_line)

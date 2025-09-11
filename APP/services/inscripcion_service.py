@@ -149,7 +149,7 @@ class InscripcionService:
         
         # Validar nota
         while True:
-            nota_str = input("\nIngrese nota (1-10, o presione Enter para cancelar): ").strip()
+            nota_str = input("\nIngrese la nota (1-10, o presione Enter para cancelar): ").strip()
             if not nota_str:
                 if confirmar_salida():
                     print("\nOperación cancelada.")
@@ -157,27 +157,15 @@ class InscripcionService:
                     return
                 continue
                 
-            if not validar_nota(nota_str):
-                print("Error: La nota debe ser un número entre 1 y 10.")
-                if confirmar_salida("¿Desea intentar con otra nota? (s/n): "):
-                    print("\nOperación cancelada.")
-                    pausar()
-                    return
-        # Solicitar nota
-        while True:
-            nota_input = input("\nIngrese la nota del estudiante (1-10, o Enter para cancelar): ").strip()
-            if not nota_input:
-                if confirmar_salida():
-                    print("\nOperación cancelada.")
-                    pausar()
-                    return
-                continue
-                
-            if validar_nota(nota_input):
-                nota = float(nota_input.replace(',', '.'))
+            if validar_nota(nota_str):
+                nota = float(nota_str.replace(',', '.'))
                 break
                 
             print("Error: La nota debe ser un número entre 1 y 10.")
+            if confirmar_salida("¿Desea intentar con otra nota? (s/n): "):
+                print("\nOperación cancelada.")
+                pausar()
+                return
         
         # Crear la inscripción
         try:
@@ -217,25 +205,40 @@ class InscripcionService:
             if est and mat:
                 # Mostrar "Sin calificar" si no hay nota asignada
                 nota = "Sin calificar" if not ins['Nota'] or ins['Nota'] == "" else str(ins['Nota'])
+                # Formatear la fecha de inscripción
+                fecha_inscripcion = ins.get('Fecha', 'N/A')
+                if fecha_inscripcion and fecha_inscripcion != 'N/A':
+                    try:
+                        from datetime import datetime
+                        fecha_obj = datetime.strptime(str(fecha_inscripcion), '%Y-%m-%d %H:%M:%S')
+                        fecha_formateada = fecha_obj.strftime('%d/%m/%Y %H:%M')
+                    except (ValueError, TypeError):
+                        fecha_formateada = str(fecha_inscripcion)
+                else:
+                    fecha_formateada = 'N/A'
+                
                 inscripciones_data.append({
                     'estudiante': f"{est['Nombre']} {est['Apellido']}",
                     'legajo': est.get('Legajo', 'N/A'),
                     'materia': mat['Nombre'],
-                    'nota': nota
+                    'nota': nota,
+                    'fecha': fecha_formateada
                 })
             else:
                 inscripciones_invalidas += 1
         
         # Mostrar tabla
         print_table(
-            headers=['Estudiante', 'Legajo', 'Materia', 'Nota'],
+            headers=['estudiante', 'legajo', 'materia', 'nota', 'fecha'],
             rows=inscripciones_data,
             column_widths={
                 'estudiante': 25,
                 'legajo': 15,
                 'materia': 25,
-                'nota': 8
+                'nota': 8,
+                'fecha': 20
             },
+            display_headers=['Estudiante', 'Legajo', 'Materia', 'Nota', 'Fecha Inscripción'],
             title="LISTADO DE INSCRIPCIONES",
             footer=(
                 f"Total de inscripciones: {len(inscripciones)} | "
