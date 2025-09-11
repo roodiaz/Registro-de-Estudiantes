@@ -66,26 +66,45 @@ class EstudianteService:
 
     def listar_estudiantes(self):
         estudiantes = self.excel.obtener_estudiantes()
+        inscripciones = self.excel.obtener_inscripciones()
+        materias = self.excel.obtener_materias()
+        
+        # Crear diccionario de materias para búsqueda rápida
+        materias_dict = {m['Id']: m for m in materias}
         
         # Preparar datos para la tabla
         estudiantes_data = []
         for est in estudiantes:
+            # Obtener materias del estudiante
+            materias_estudiante = []
+            estudiante_id = str(est['Id'])
+            
+            for ins in inscripciones:
+                # Asegurarse de que ambos IDs sean cadenas para la comparación
+                if str(ins['EstudianteId']) == estudiante_id:
+                    if str(ins['MateriaId']) in materias_dict:
+                        materias_estudiante.append(materias_dict[str(ins['MateriaId'])]['Nombre'])
+            
             promedio = self.excel.calcular_promedio(est["Id"])
             estudiantes_data.append({
                 'legajo': est['Legajo'],
                 'nombre': est['Nombre'],
                 'apellido': est['Apellido'],
+                'materias inscriptas': ', '.join(materias_estudiante) if materias_estudiante else 'Ninguna',
+                'cant. materias': str(len(materias_estudiante)),
                 'promedio': f"{promedio:.2f}" if promedio is not None else "N/A"
             })
         
         # Mostrar tabla
         print_table(
-            headers=['Legajo', 'Nombre', 'Apellido', 'Promedio'],
+            headers=['legajo', 'nombre', 'apellido', 'materias inscriptas', 'cant. materias', 'promedio'],
             rows=estudiantes_data,
             column_widths={
                 'legajo': 15,
-                'nombre': 25,
-                'apellido': 25,
+                'nombre': 20,
+                'apellido': 20,
+                'materias inscriptas': 40,
+                'cant. materias': 15,
                 'promedio': 10
             },
             title="LISTADO DE ESTUDIANTES",
@@ -213,27 +232,21 @@ class EstudianteService:
             
         # Mostrar estudiantes en tabla
         estudiantes_data = []
-        for est in estudiantes:
-            # Contar materias en las que está inscripto
-            inscripciones = self.excel.obtener_inscripciones()
-            materias_inscriptas = sum(1 for ins in inscripciones if ins["EstudianteId"] == est["Id"])
-            
+        for est in estudiantes:            
             estudiantes_data.append({
                 'legajo': est['Legajo'],
                 'nombre': est['Nombre'],
                 'apellido': est['Apellido'],
-                'materias': str(materias_inscriptas)
             })
         
         # Mostrar tabla de estudiantes
         print_table(
-            headers=['Legajo', 'Nombre', 'Apellido', 'Materias Inscriptas'],
+            headers=['Legajo', 'Nombre', 'Apellido'],
             rows=estudiantes_data,
             column_widths={
                 'legajo': 15, 
                 'nombre': 20, 
                 'apellido': 20, 
-                'materias': 10
             },
             title="LISTA DE ESTUDIANTES"
         )

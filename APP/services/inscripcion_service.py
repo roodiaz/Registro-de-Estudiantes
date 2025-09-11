@@ -2,6 +2,7 @@ from persistence.excel_manager import ExcelManager
 from utils.helpers import generar_id, pausar, limpiar_pantalla
 from utils.validators import validar_nota
 from utils.input_utils import confirmar_salida
+from utils.table_utils import print_table
 
 class InscripcionService:
     def __init__(self):
@@ -35,88 +36,104 @@ class InscripcionService:
             materias_inscriptas = sum(1 for ins in inscripciones if ins["EstudianteId"] == est["Id"])
             
             estudiantes_data.append({
-                'ID': est['Id'],
-                'Nombre': est['Nombre'],
-                'Apellido': est['Apellido'],
-                'Legajo': est.get('Legajo', 'N/A'),
-                'Materias': str(materias_inscriptas)
+                'legajo': est['Legajo'],
+                'nombre': est['Nombre'],
+                'apellido': est['Apellido'],
+                'materias': str(materias_inscriptas)
             })
         
         # Mostrar tabla
         print_table(
-            headers=['ID', 'Nombre', 'Apellido', 'Legajo', 'Materias Inscriptas'],
+            headers=['Legajo', 'Nombre', 'Apellido', 'Materias Inscriptas'],
             rows=estudiantes_data,
             column_widths={
-                'ID': 8,
-                'Nombre': 20,
-                'Apellido': 20,
-                'Legajo': 15,
-                'Materias': 10
+                'legajo': 15, 
+                'nombre': 20, 
+                'apellido': 20, 
+                'materias': 10
             }
         )
         
         # Validar estudiante
         while True:
-            est_id = input("\nIngrese ID del estudiante (o presione Enter para cancelar): ").strip()
-            if not est_id:
+            legajo = input("\nIngrese LEGAJO del estudiante (o presione Enter para cancelar): ").strip()
+            if not legajo:
                 if confirmar_salida():
                     print("\nOperación cancelada.")
                     pausar()
                     return
                 continue
                 
-            estudiante = next((e for e in estudiantes if e["Id"] == est_id), None)
+            estudiante = next((e for e in estudiantes if e["Legajo"] == legajo), None)
             if estudiante:
                 break
                 
-            print("Error: ID de estudiante no válido. Intente nuevamente o presione Enter para cancelar.")
+            print("Error: LEGAJO de estudiante no válido. Intente nuevamente o presione Enter para cancelar.")
         
+        # Obtener materias en las que ya está inscripto el estudiante
+        inscripciones = self.excel.obtener_inscripciones()
+        materias_inscriptas = set(
+            ins["MateriaId"] 
+            for ins in inscripciones 
+            if ins["EstudianteId"] == estudiante["Id"]
+        )
+        
+        # Filtrar materias disponibles (excluyendo las ya inscriptas)
+        materias_disponibles = [m for m in materias if m["Id"] not in materias_inscriptas]
+        
+        if not materias_disponibles:
+            print("\n⚠️  El estudiante ya está inscripto en todas las materias disponibles.")
+            pausar()
+            return
+            
         # Mostrar materias disponibles en tabla
-        print("\nMaterias disponibles:")
+        print("\nMaterias disponibles (no inscriptas):")
         
         # Preparar datos para la tabla
         materias_data = []
-        for mat in materias:
+        for mat in materias_disponibles:
             # Contar estudiantes inscriptos en esta materia
-            inscripciones = self.excel.obtener_inscripciones()
-            estudiantes_inscriptos = sum(1 for ins in inscripciones if ins["MateriaId"] == mat["Id"])
+            estudiantes_inscriptos = sum(
+                1 for ins in inscripciones 
+                if ins["MateriaId"] == mat["Id"]
+            )
             
             materias_data.append({
-                'ID': mat['Id'],
-                'Nombre': mat['Nombre'],
-                'Estudiantes': str(estudiantes_inscriptos)
+                'código': mat['Codigo'],
+                'nombre': mat['Nombre'],
+                'estudiantes': str(estudiantes_inscriptos)
             })
         
         # Mostrar tabla
         print_table(
-            headers=['ID', 'Materia', 'Estudiantes Inscriptos'],
+            headers=['Código', 'Nombre', 'Estudiantes Inscriptos'],
             rows=materias_data,
             column_widths={
-                'ID': 8,
-                'Materia': 40,
-                'Estudiantes': 10
+                'código': 8,
+                'nombre': 40,
+                'estudiantes': 10
             }
         )
         
         # Validar materia
         while True:
-            mat_id = input("\nIngrese ID de la materia (o presione Enter para cancelar): ").strip()
-            if not mat_id:
+            codigo = input("\nIngrese CÓDIGO de la materia (o presione Enter para cancelar): ").strip()
+            if not codigo:
                 if confirmar_salida():
                     print("\nOperación cancelada.")
                     pausar()
                     return
                 continue
                 
-            materia = next((m for m in materias if m["Id"] == mat_id), None)
+            materia = next((m for m in materias if m["Codigo"] == codigo), None)
             if not materia:
-                print("Error: ID de materia no válido. Intente nuevamente o presione Enter para cancelar.")
+                print("Error: CÓDIGO de materia no válido. Intente nuevamente o presione Enter para cancelar.")
                 continue
                 
             # Verificar si ya existe una inscripción para este estudiante en esta materia
             inscripciones = self.excel.obtener_inscripciones()
             existe_inscripcion = any(
-                ins["EstudianteId"] == est_id and ins["MateriaId"] == mat_id 
+                ins["EstudianteId"] == estudiante["Id"] and ins["MateriaId"] == materia["Id"] 
                 for ins in inscripciones
             )
             
@@ -146,31 +163,32 @@ class InscripcionService:
                     print("\nOperación cancelada.")
                     pausar()
                     return
+        # Solicitar nota
+        while True:
+            nota_input = input("\nIngrese la nota del estudiante (1-10, o Enter para cancelar): ").strip()
+            if not nota_input:
+                if confirmar_salida():
+                    print("\nOperación cancelada.")
+                    pausar()
+                    return
                 continue
                 
-            nota = float(nota_str)
-            break
-        
-        # Confirmar antes de guardar
-        print(f"\nResumen de la inscripción:")
-        print(f"Estudiante: {estudiante['Nombre']} {estudiante['Apellido']} (ID: {estudiante['Id']})")
-        print(f"Materia: {materia['Nombre']} (ID: {materia['Id']})")
-        print(f"Nota: {nota}")
-        
-        if not confirmar_salida("\n¿Desea confirmar la inscripción? (s/n): "):
-            print("\nOperación cancelada.")
-            pausar()
-            return
+            if validar_nota(nota_input):
+                nota = float(nota_input.replace(',', '.'))
+                break
+                
+            print("Error: La nota debe ser un número entre 1 y 10.")
         
         # Crear la inscripción
         try:
             nuevo_id = generar_id("Inscripciones")
-            self.excel.agregar_inscripcion([nuevo_id, est_id, mat_id, nota])
+            self.excel.agregar_inscripcion([nuevo_id, estudiante["Id"], materia["Id"], str(nota)])
             print("\n✅ Inscripción registrada con éxito.")
         except Exception as e:
             print(f"\n❌ Error al registrar la inscripción: {str(e)}")
             
         pausar()
+
 
     def listar_inscripciones(self):
         limpiar_pantalla()
@@ -197,22 +215,22 @@ class InscripcionService:
             mat = materias_dict.get(ins["MateriaId"])
             
             if est and mat:
+                # Mostrar "Sin calificar" si no hay nota asignada
+                nota = "Sin calificar" if not ins['Nota'] or ins['Nota'] == "" else str(ins['Nota'])
                 inscripciones_data.append({
-                    'id': ins['Id'],
                     'estudiante': f"{est['Nombre']} {est['Apellido']}",
                     'legajo': est.get('Legajo', 'N/A'),
                     'materia': mat['Nombre'],
-                    'nota': str(ins['Nota'])
+                    'nota': nota
                 })
             else:
                 inscripciones_invalidas += 1
         
         # Mostrar tabla
         print_table(
-            headers=['ID', 'Estudiante', 'Legajo', 'Materia', 'Nota'],
+            headers=['Estudiante', 'Legajo', 'Materia', 'Nota'],
             rows=inscripciones_data,
             column_widths={
-                'id': 8,
                 'estudiante': 25,
                 'legajo': 15,
                 'materia': 25,

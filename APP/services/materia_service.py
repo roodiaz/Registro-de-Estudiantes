@@ -6,6 +6,52 @@ from utils.table_utils import print_table
 class MateriaService:
     def __init__(self):
         self.excel = ExcelManager()
+        
+    def listar_materias(self):
+        materias = self.excel.obtener_materias()
+        
+        if not materias:
+            print("No hay materias registradas.")
+            pausar()
+            return
+            
+        # Obtener conteo de inscripciones por materia
+        inscripciones = self.excel.obtener_inscripciones()
+        contador_inscripciones = {}
+        for ins in inscripciones:
+            contador_inscripciones[ins["MateriaId"]] = contador_inscripciones.get(ins["MateriaId"], 0) + 1
+        
+        # Preparar datos para la tabla
+        materias_data = []
+        for mat in materias:
+            try:
+                materia_id = mat.get("Id")
+                codigo = str(mat.get('Codigo', '')).strip()
+                nombre = str(mat.get('Nombre', '')).strip()
+                num_inscripciones = contador_inscripciones.get(materia_id, 0)
+                
+                materias_data.append({
+                    'código': codigo,
+                    'nombre': nombre,
+                    'estudiantes inscriptos': str(num_inscripciones)
+                })
+                
+            except Exception:
+                continue
+        
+        # Mostrar tabla
+        print_table(
+            headers=['Código', 'Nombre', 'Estudiantes Inscriptos'],
+            rows=materias_data,
+            column_widths={
+                'codigo': 15,
+                'nombre': 40,
+                'inscripciones': 20
+            },
+            title="LISTADO DE MATERIAS",
+            footer=f"Total de materias: {len(materias_data)}"
+        )
+        pausar()
 
     def crear_materia(self):
         print("\nALTA DE MATERIA (deje en blanco y presione Enter en cualquier momento para cancelar)\n")
@@ -64,45 +110,6 @@ class MateriaService:
             
         pausar()
 
-    def modificar_materia(self):
-        print("\nMODIFICAR MATERIA (deje en blanco y presione Enter en cualquier momento para cancelar)\n")
-        
-        materias = self.excel.obtener_materias()
-        if not materias:
-            print("No hay materias registradas.")
-            pausar()
-            return
-        
-        # Obtener conteo de inscripciones por materia
-        inscripciones = self.excel.obtener_inscripciones()
-        contador_inscripciones = {}
-        for ins in inscripciones:
-            contador_inscripciones[ins["MateriaId"]] = contador_inscripciones.get(ins["MateriaId"], 0) + 1
-        
-        # Preparar datos para la tabla
-        materias_data = []
-        for mat in materias:
-            num_inscripciones = contador_inscripciones.get(mat["Id"], 0)
-            materias_data.append({
-                'codigo': mat['Codigo'],
-                'nombre': mat['Nombre'],
-                'inscripciones': str(num_inscripciones)
-            })
-        
-        # Mostrar tabla
-        print_table(
-            headers=['Código', 'Nombre', 'Estudiantes Inscriptos'],
-            rows=materias_data,
-            column_widths={
-                'codigo': 15,
-                'nombre': 40,
-                'inscripciones': 20
-            },
-            title="LISTADO DE MATERIAS",
-            footer=f"Total de materias: {len(materias_data)}"
-        )
-        pausar()
-
     def eliminar_materia(self):
         print("\nELIMINAR MATERIA (deje en blanco y presione Enter en cualquier momento para cancelar)\n")
         
@@ -112,26 +119,44 @@ class MateriaService:
             pausar()
             return
             
-        # Mostrar materias disponibles en tabla
-        print("Materias disponibles:")
+        # Contar inscripciones por materia
+        inscripciones = self.excel.obtener_inscripciones()
+        contador_inscripciones = {}
+        for ins in inscripciones:
+            materia_id = ins["MateriaId"]
+            contador_inscripciones[materia_id] = contador_inscripciones.get(materia_id, 0) + 1
         
         # Preparar datos para la tabla
         materias_data = []
         for mat in materias:
-            inscripciones = self.excel.obtener_inscripciones()
-            num_inscripciones = sum(1 for ins in inscripciones if ins["MateriaId"] == mat["Id"])
-            materias_data.append({
-                'codigo': mat['Codigo'],
-                'nombre': mat['Nombre'],
-                'inscripciones': str(num_inscripciones)
-            })
+            try:
+                materia_id = mat["Id"]
+                codigo = str(mat['Codigo']).strip()
+                nombre = str(mat['Nombre']).strip()
+                num_inscripciones = contador_inscripciones.get(materia_id, 0)
+                
+                materias_data.append({
+                    'código': codigo,
+                    'nombre': nombre,
+                    'estudiantes inscriptos': str(num_inscripciones)
+                })
+                
+            except Exception as e:
+                print(f"[DEBUG] Error al procesar materia: {e}")
+                continue
         
         # Mostrar tabla
         print_table(
-            headers=['Código', 'Nombre', 'Estudiantes Inscriptos'],
+            headers=['código', 'nombre', 'estudiantes inscriptos'],
             rows=materias_data,
-            column_widths={'codigo': 15, 'nombre': 40, 'inscripciones': 20}
+            column_widths={
+                'código': 15,
+                'nombre': 40,
+                'estudiantes inscriptos': 20
+            },
+            title="LISTA DE MATERIAS"
         )
+        pausar()
             
         while True:
             codigo = input("\nIngrese el CÓDIGO de la materia a eliminar (o presione Enter para cancelar): ").strip().upper()

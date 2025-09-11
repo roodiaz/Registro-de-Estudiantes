@@ -65,7 +65,7 @@ class ExcelManager:
         # Verificar si ya existe una materia con el mismo código
         codigo = datos[1]  # El código está en la segunda posición
         for row in ws.iter_rows(min_row=2, values_only=True):
-            if row and row[1] == codigo:  # Verificar el código en la segunda columna
+            if row and str(row[1]).lower() == codigo.lower():
                 raise ValueError(f"Ya existe una materia con el código: {codigo}")
                 
         ws.append(datos)
@@ -84,6 +84,26 @@ class ExcelManager:
                 })
         return datos
 
+    def obtener_materia_por_codigo(self, codigo):
+        wb = self._abrir()
+        ws = wb["Materias"]
+        for row in ws.iter_rows(values_only=True):
+            if row and str(row[1]).lower() == codigo.lower():
+                return {
+                    "Id": row[0],
+                    "Codigo": row[1],
+                    "Nombre": row[2]
+                }
+        return None
+
+    def codigo_materia_existe(self, codigo):
+        wb = self._abrir()
+        ws = wb["Materias"]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row and str(row[1]).lower() == codigo.lower():
+                return True
+        return False
+
     def modificar_materia(self, codigo, nuevo_nombre):
         wb = self._abrir()
         ws = wb["Materias"]
@@ -98,7 +118,7 @@ class ExcelManager:
         wb = self._abrir()
         ws = wb["Materias"]
         for idx, row in enumerate(ws.iter_rows(min_row=2), start=2):
-            if str(row[1].value).lower() == codigo.lower():  # Buscar por código
+            if row[1].value and str(row[1].value).strip().lower() == codigo.lower():
                 ws.delete_rows(idx)
                 self._guardar(wb)
                 return True
