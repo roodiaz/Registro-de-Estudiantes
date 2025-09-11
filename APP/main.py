@@ -71,7 +71,7 @@ def menu_inscripciones(servicio):
             print("Opción inválida.")
 
 
-def menu_exportaciones(exporter):
+def menu_exportaciones(exporter, inscripcion_service):
     while True:
         limpiar_pantalla()
         print("\n--- Exportar datos ---\n")
@@ -83,8 +83,11 @@ def menu_exportaciones(exporter):
         if opcion == "1":
             exporter.exportar_todo()
         elif opcion == "2":
-            legajo = input("Ingrese legajo del estudiante: ")
-            exporter.exportar_estudiante(legajo)
+            # Mostrar lista de estudiantes usando el servicio de inscripciones
+            if inscripcion_service.mostrar_estudiantes():
+                legajo = input("\nIngrese el LEGAJO del estudiante a exportar: ").strip()
+                if legajo:  # Solo intentar exportar si se ingresó un legajo
+                    exporter.exportar_estudiante(legajo)
         elif opcion == "3":
             break
         else:
@@ -118,7 +121,7 @@ def main():
         elif opcion == "3":
             menu_inscripciones(inscripcion_service)
         elif opcion == "4":
-            menu_exportaciones(exporter)
+            menu_exportaciones(exporter, inscripcion_service)
         elif opcion == "5":
             print("Saliendo del sistema...")
             break

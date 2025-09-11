@@ -8,6 +8,22 @@ class InscripcionService:
     def __init__(self):
         self.excel = ExcelManager()
 
+    def mostrar_estudiantes(self):
+        """Muestra la lista de estudiantes en formato de tabla."""
+        estudiantes = self.excel.obtener_estudiantes()
+        if not estudiantes:
+            print("\n❌ No hay estudiantes registrados.")
+            return False
+            
+        print("\nListado de estudiantes:")
+        print("-" * 60)
+        print(f"{'Legajo':<10} | {'Apellido':<20} | {'Nombre':<20}")
+        print("-" * 60)
+        for est in sorted(estudiantes, key=lambda x: (x['Apellido'], x['Nombre'])):
+            print(f"{est['Legajo']:<10} | {est['Apellido']:<20} | {est['Nombre']:<20}")
+        print("-" * 60)
+        return True
+
     def inscribir_estudiante(self):
         print("\nINSCRIPCIÓN DE ESTUDIANTE (deje en blanco y presione Enter en cualquier momento para cancelar)\n")
         
