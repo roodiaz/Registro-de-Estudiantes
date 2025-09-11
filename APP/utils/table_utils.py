@@ -61,33 +61,64 @@ def print_table(
     if len(display_headers_list) != len(headers_lower):
         display_headers_list = [h.title() for h in headers_lower]
     
-    # Imprimir encabezados
+    # Crear línea de encabezado
     header_line = ""
+    separator_line = ""
+    
     if show_index:
         header_line += "  #  |"
+        separator_line += "-----+-"
     
     for i, h in enumerate(headers_lower):
         display_text = str(display_headers_list[i])
-        header_line += f" {display_text:<{column_widths[h]}}|"
+        header_line += f" {display_text:<{column_widths[h]}} |"
+        separator_line += "-" * (column_widths[h] + 2) + "+"
     
-    print("-" * (len(header_line) + 1))
+    # Imprimir separador superior
+    print(separator_line)
+    # Imprimir encabezado
     print(header_line)
-    print("-" * (len(header_line) + 1))
+    # Imprimir separador inferior
+    print(separator_line)
     
     # Imprimir filas
-    for idx, row in enumerate(rows, 1):
-        row_line = ""
-        if show_index:
-            row_line += f" {idx:<3} |"
+    for i, row in enumerate(rows, 1):
+        # Convertir todas las celdas a string y manejar saltos de línea
+        str_row = {k: str(v) if v is not None else '' for k, v in row.items()}
         
+        # Encontrar el número máximo de líneas necesarias para esta fila
+        max_lines = 1
         for h in headers_lower:
-            value = str(row.get(h, '')).replace('\n', ' ').replace('\r', '')[:50]  # Limitar a 50 caracteres
-            row_line += f" {value:<{column_widths[h]}}|"
+            lines = str_row.get(h, '').split('\n')
+            max_lines = max(max_lines, len(lines))
         
-        print(row_line)
+        # Imprimir cada línea de la fila (puede ser múltiples líneas por celda)
+        for line_num in range(max_lines):
+            # Mostrar número de fila solo en la primera línea
+            if line_num == 0 and show_index:
+                print(f"{i:>4} |", end=" ")
+            elif show_index:
+                print("     ", end=" ")  # Espacio para alinear columnas
+                
+            # Imprimir cada celda de la fila
+            for j, h in enumerate(headers_lower):
+                cell_lines = str_row.get(h, '').split('\n')
+                if line_num < len(cell_lines):
+                    cell_value = cell_lines[line_num]
+                else:
+                    cell_value = ""
+                
+                # Truncar el valor si es más largo que el ancho de la columna
+                if len(cell_value) > column_widths[h]:
+                    cell_value = cell_value[:column_widths[h]-3] + "..."
+                print(f" {cell_value:<{column_widths[h]}} |", end="")
+            print()  # Nueva línea para la siguiente línea de la fila
+        # Imprimir separador de fila si hay más filas o si es la última fila
+        if i < len(rows) or line_num < max_lines - 1:
+            print(separator_line)
     
     # Imprimir pie de tabla
-    print("-" * (len(header_line) + 1))
     if footer:
-        print(f"{footer}")
+        print(separator_line)
+        print(f"{footer:^{len(separator_line)}}")
     print()  # Espacio adicional después de la tabla

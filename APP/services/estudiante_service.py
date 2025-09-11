@@ -90,7 +90,7 @@ class EstudianteService:
                 'legajo': est['Legajo'],
                 'nombre': est['Nombre'],
                 'apellido': est['Apellido'],
-                'materias inscriptas': ', '.join(materias_estudiante) if materias_estudiante else 'Ninguna',
+                'materias inscriptas': '\n'.join(materias_estudiante) if materias_estudiante else 'Ninguna',
                 'cant. materias': str(len(materias_estudiante)),
                 'promedio': f"{promedio:.2f}" if promedio is not None else "N/A"
             })
